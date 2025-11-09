@@ -1,14 +1,21 @@
-defalut:
-	@gcc 2048.c 2048.h -g -o 2048
+TARGET = cgame
 
-debug:
-	@make clean;
-	@gcc 2048.c 2048.h -g -o 2048
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS:.c=.o)
 
-release:
-	@make clean;
-	@gcc 2048.c 2048.h -o 2048;
-	@sudo ln -s $(CURDIR)/2048 /usr/bin/2048
+CC = gcc
+CFLAGS = -g -o0
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) $(OBJS) -o $(TARGET)
+	rm -f $(OBJS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	@sudo rm -f 2048 /usr/bin/2048
+	rm -f $(OBJS) $(TARGET)
