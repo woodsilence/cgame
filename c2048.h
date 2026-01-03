@@ -1,5 +1,5 @@
 #ifndef C2048_H
-#define C2048_h
+#define C2048_H
 
 #include<stdio.h>
 #include<time.h>
