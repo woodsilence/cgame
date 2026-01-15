@@ -1,6 +1,7 @@
-# 2048
-## control
+# CGAME
 
+## 2048
+### control
 
 W -> UP
 
