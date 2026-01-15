@@ -5,13 +5,6 @@
 #include<time.h>
 #include<stdlib.h>
 
-#ifdef _WIN32
-    #include<conio.h>
-#elif __linux__
-    #include <unistd.h>
-    #include <termios.h>
-#endif
-
 
 void c2048();
 
@@ -29,11 +22,6 @@ void down();
 void right();
 void left();
 void reset();
-
-void clear_screen();
-#ifdef __linux__
-    int getch();
-#endif
 
 void swap(int* a,int* b);
 

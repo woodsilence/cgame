@@ -1,38 +1,17 @@
 #include "c2048.h"
+#include "ncurses.h"
 
 #define SIZE 4
 int score;
 int map[SIZE][SIZE];
 
-#ifdef __linux__
-int getch() {
-  struct termios oldt, newt;
-  int ch;
-  tcgetattr(STDIN_FILENO, &oldt);
-  newt = oldt;
-  newt.c_lflag &= ~(ICANON | ECHO);
-  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-  ch = getchar();
-  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-  return ch;
-}
-#endif
-
-void clear_screen() {
-#ifdef _WIN32
-  system("cls");
-#else
-  system("clear");
-#endif
-}
-
 void c2048() {
+  initscr(); // 初始化ncurses模式
   init_map();
 
   int gameshouldclose = 0;
 
   while (!gameshouldclose) {
-    clear_screen();
     print_map();
     int key = getch();
     if (key == 224)
@@ -58,10 +37,13 @@ void c2048() {
     else if (res == -1)
       gameshouldclose = gameover();
   }
+  endwin(); // 退出
 }
 int gameover() {
-  printf("FINAL SCORE: %d\n", score);
-  printf("PRESS R TO PLAY ANGIN\nPRESS E TO EXIT\n");
+  clear(); // 刷新屏幕
+  printw("FINAL SCORE: %d\n", score);
+  printw("PRESS R TO PLAY AGAIN\nPRESS E TO EXIT\n");
+  refresh();
   while (1) {
     int key2 = getch();
     if (key2 == 224)
@@ -92,27 +74,29 @@ void random_map() {
   map[i][j] = 2;
 }
 void print_map() {
-  printf(" SCORE: %d\n", score);
+  erase(); // 清屏
+  printw(" SCORE: %d\n", score);
   for (int i = 0; i < SIZE; i++) {
-    printf("+----+----+----+----+\n");
-    printf("|");
+    printw("+----+----+----+----+\n");
+    printw("|");
     for (int j = 0; j < SIZE; j++) {
       if (map[i][j] < 10) {
-        printf("  %d ", map[i][j]);
+        printw("  %d ", map[i][j]);
       } else if (map[i][j] < 100) {
-        printf(" %d ", map[i][j]);
+        printw(" %d ", map[i][j]);
       } else if (map[i][j] < 1000) {
-        printf(" %d", map[i][j]);
+        printw(" %d", map[i][j]);
       } else {
-        printf("%d", map[i][j]);
+        printw("%d", map[i][j]);
       }
-      printf("|");
+      printw("|");
     }
-    printf("\n");
+    printw("\n");
   }
-  printf("+----+----+----+----+\n");
+  printw("+----+----+----+----+\n");
+  refresh();
 }
-//平移->合并->平移
+// 平移->合并->平移
 void up() {
   for (int j = 0; j < SIZE; j++) {
     for (int i = 0; i < SIZE; i++) {
