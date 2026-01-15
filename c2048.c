@@ -1,41 +1,17 @@
+#include "c2048.h"
+#include "ncurses.h"
 
-#include "2048.h"
+#define SIZE 4
+int score;
+int map[SIZE][SIZE];
 
-#ifdef __linux__
-int getch() {
-  struct termios oldt, newt;
-  int ch;
-  tcgetattr(STDIN_FILENO, &oldt);
-  newt = oldt;
-  newt.c_lflag &= ~(ICANON | ECHO);
-  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-  ch = getchar();
-  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-  return ch;
-}
-#endif
-
-void clear_screen() {
-#ifdef _WIN32
-  system("cls");
-#else
-  system("clear");
-#endif
-}
-
-int main() {
-  main_game();
-
-  return 0;
-}
-
-void main_game() {
+void c2048() {
+  initscr(); // 初始化ncurses模式
   init_map();
 
   int gameshouldclose = 0;
 
   while (!gameshouldclose) {
-    clear_screen();
     print_map();
     int key = getch();
     if (key == 224)
@@ -61,10 +37,13 @@ void main_game() {
     else if (res == -1)
       gameshouldclose = gameover();
   }
+  endwin(); // 退出
 }
 int gameover() {
-  printf("FINAL SCORE: %d\n", score);
-  printf("PRESS R TO PLAY ANGIN\nPRESS E TO EXIT\n");
+  clear(); // 刷新屏幕
+  printw("FINAL SCORE: %d\n", score);
+  printw("PRESS R TO PLAY AGAIN\nPRESS E TO EXIT\n");
+  refresh();
   while (1) {
     int key2 = getch();
     if (key2 == 224)
@@ -78,8 +57,8 @@ int gameover() {
   return -1;
 }
 void init_map() {
-  for (int i = 0; i < size; i++) {
-    for (int j = 0; j < size; j++) {
+  for (int i = 0; i < SIZE; i++) {
+    for (int j = 0; j < SIZE; j++) {
       map[i][j] = 0;
     }
   }
@@ -89,38 +68,40 @@ void random_map() {
   int i, j;
   srand(time(NULL));
   do {
-    i = rand() % size;
-    j = rand() % size;
+    i = rand() % SIZE;
+    j = rand() % SIZE;
   } while (map[i][j] != 0);
   map[i][j] = 2;
 }
 void print_map() {
-  printf(" SCORE: %d\n", score);
-  for (int i = 0; i < size; i++) {
-    printf("+----+----+----+----+\n");
-    printf("|");
-    for (int j = 0; j < size; j++) {
+  erase(); // 清屏
+  printw(" SCORE: %d\n", score);
+  for (int i = 0; i < SIZE; i++) {
+    printw("+----+----+----+----+\n");
+    printw("|");
+    for (int j = 0; j < SIZE; j++) {
       if (map[i][j] < 10) {
-        printf("  %d ", map[i][j]);
+        printw("  %d ", map[i][j]);
       } else if (map[i][j] < 100) {
-        printf(" %d ", map[i][j]);
+        printw(" %d ", map[i][j]);
       } else if (map[i][j] < 1000) {
-        printf(" %d", map[i][j]);
+        printw(" %d", map[i][j]);
       } else {
-        printf("%d", map[i][j]);
+        printw("%d", map[i][j]);
       }
-      printf("|");
+      printw("|");
     }
-    printf("\n");
+    printw("\n");
   }
-  printf("+----+----+----+----+\n");
+  printw("+----+----+----+----+\n");
+  refresh();
 }
-//平移->合并->平移
+// 平移->合并->平移
 void up() {
-  for (int j = 0; j < size; j++) {
-    for (int i = 0; i < size; i++) {
+  for (int j = 0; j < SIZE; j++) {
+    for (int i = 0; i < SIZE; i++) {
       if (map[i][j] == 0) {
-        for (int k = i + 1; k < size; k++) {
+        for (int k = i + 1; k < SIZE; k++) {
           if (map[k][j] != 0) {
             swap(&map[k][j], &map[i][j]);
             break;
@@ -128,16 +109,16 @@ void up() {
         }
       }
     }
-    for (int i = 1; i < size; i++) {
+    for (int i = 1; i < SIZE; i++) {
       if (map[i - 1][j] == map[i][j]) {
         map[i - 1][j] *= 2;
         score += map[i - 1][j];
         map[i][j] = 0;
       }
     }
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < SIZE; i++) {
       if (map[i][j] == 0) {
-        for (int k = i + 1; k < size; k++) {
+        for (int k = i + 1; k < SIZE; k++) {
           if (map[k][j] != 0) {
             swap(&map[k][j], &map[i][j]);
             break;
@@ -148,8 +129,8 @@ void up() {
   }
 }
 void down() {
-  for (int j = 0; j < size; j++) {
-    for (int i = size - 1; i > -1; i--) {
+  for (int j = 0; j < SIZE; j++) {
+    for (int i = SIZE - 1; i > -1; i--) {
       if (map[i][j] == 0) {
         for (int k = i - 1; k > -1; k--) {
           if (map[k][j] != 0) {
@@ -159,14 +140,14 @@ void down() {
         }
       }
     }
-    for (int i = size - 2; i > -1; i--) {
+    for (int i = SIZE - 2; i > -1; i--) {
       if (map[i + 1][j] == map[i][j]) {
         map[i + 1][j] *= 2;
         score += map[i + 1][j];
         map[i][j] = 0;
       }
     }
-    for (int i = size - 1; i > -1; i--) {
+    for (int i = SIZE - 1; i > -1; i--) {
       if (map[i][j] == 0) {
         for (int k = i - 1; k > -1; k--) {
           if (map[k][j] != 0) {
@@ -179,10 +160,10 @@ void down() {
   }
 }
 void left() {
-  for (int i = 0; i < size; i++) {
-    for (int j = 0; j < size; j++) {
+  for (int i = 0; i < SIZE; i++) {
+    for (int j = 0; j < SIZE; j++) {
       if (map[i][j] == 0) {
-        for (int l = j + 1; l < size; l++) {
+        for (int l = j + 1; l < SIZE; l++) {
           if (map[i][l] != 0) {
             swap(&map[i][l], &map[i][j]);
             break;
@@ -190,16 +171,16 @@ void left() {
         }
       }
     }
-    for (int j = 1; j < size; j++) {
+    for (int j = 1; j < SIZE; j++) {
       if (map[i][j - 1] == map[i][j]) {
         map[i][j - 1] *= 2;
         score += map[i][j - 1];
         map[i][j] = 0;
       }
     }
-    for (int j = 0; j < size; j++) {
+    for (int j = 0; j < SIZE; j++) {
       if (map[i][j] == 0) {
-        for (int l = j + 1; l < size; l++) {
+        for (int l = j + 1; l < SIZE; l++) {
           if (map[i][l] != 0) {
             swap(&map[i][l], &map[i][j]);
             break;
@@ -210,8 +191,8 @@ void left() {
   }
 }
 void right() {
-  for (int i = 0; i < size; i++) {
-    for (int j = size - 1; j > -1; j--) {
+  for (int i = 0; i < SIZE; i++) {
+    for (int j = SIZE - 1; j > -1; j--) {
       if (map[i][j] == 0) {
         for (int l = j - 1; l > -1; l--) {
           if (map[i][l] != 0) {
@@ -221,14 +202,14 @@ void right() {
         }
       }
     }
-    for (int j = size - 2; j > -1; j--) {
+    for (int j = SIZE - 2; j > -1; j--) {
       if (map[i][j + 1] == map[i][j]) {
         map[i][j + 1] *= 2;
         score += map[i][j + 1];
         map[i][j] = 0;
       }
     }
-    for (int j = 0; j < size; j++) {
+    for (int j = 0; j < SIZE; j++) {
       if (map[i][j] == 0) {
         for (int l = j - 1; l > -1; l--) {
           if (map[i][l] != 0) {
@@ -245,14 +226,14 @@ void reset() {
   score = 0;
 }
 int check() {
-  for (int i = 0; i < size; i++) {
-    for (int j = 0; j < size; j++) {
+  for (int i = 0; i < SIZE; i++) {
+    for (int j = 0; j < SIZE; j++) {
       if (map[i][j] == 0)
         return 0;
     }
   }
-  for (int i = 1; i < size; i++) {
-    for (int j = 1; j < size; j++) {
+  for (int i = 1; i < SIZE; i++) {
+    for (int j = 1; j < SIZE; j++) {
       if ((map[i][j] == map[i - 1][j]) || (map[i][j] == map[i][j - 1]))
         return 1;
     }

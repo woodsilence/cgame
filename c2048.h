@@ -1,15 +1,12 @@
+#ifndef C2048_H
+#define C2048_H
+
 #include<stdio.h>
 #include<time.h>
 #include<stdlib.h>
 
-#ifdef _WIN32
-    #include<conio.h>
-#elif __linux__
-    #include <unistd.h>
-    #include <termios.h>
-#endif
 
-#define size 4
+void c2048();
 
 
 void init_map();
@@ -26,11 +23,6 @@ void right();
 void left();
 void reset();
 
-void clear_screen();
-#ifdef __linux__
-    int getch();
-#endif
 void swap(int* a,int* b);
 
-int score;
-int map[size][size];
+#endif // C2048_h
