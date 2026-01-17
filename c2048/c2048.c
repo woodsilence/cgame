@@ -1,45 +1,105 @@
 #include "c2048.h"
 #include "ncurses.h"
+#include <string.h>
 
 #define SIZE 4
 int score;
 int map[SIZE][SIZE];
 
 void c2048() {
-  initscr(); // 初始化ncurses模式
-  init_map();
-
-  int gameshouldclose = 0;
-
-  while (!gameshouldclose) {
-    print_map();
-    int key = getch();
-    if (key == 224)
-      key = getch();
-    if (key == 27 || key == 101)
-      break;
-    else if (key == 72 || key == 119)
-      up();
-    else if (key == 80 || key == 115)
-      down();
-    else if (key == 75 || key == 97)
-      left();
-    else if (key == 77 || key == 100)
-      right();
-    else if (key == 114)
-      reset();
-    else
-      continue;
-
-    int res = check();
-    if (res == 0)
-      random_map();
-    else if (res == -1)
-      gameshouldclose = gameover();
-  }
-  endwin(); // 退出
+  init_game();
+  while (game_loop() == 1)
+    ;
+  end_game();
 }
-int gameover() {
+
+int init_game() {
+  initscr();
+  srand(time(NULL));
+  init_map();
+  return 0;
+}
+
+int game_loop() {
+  random_map();
+  int res = game_check();
+  if (res == -1)
+    return !game_over();
+  print_map();
+  Operation op = get_operation();
+  switch (op) {
+  case MoveUp:
+    up();
+    break;
+  case MoveDown:
+    down();
+    break;
+  case MoveLeft:
+    left();
+    break;
+  case MoveRight:
+    right();
+    break;
+  case Quit:
+    return 0;
+  case Restart:
+    reset();
+  default:
+    return 1;
+  }
+
+  return 1;
+}
+
+int end_game() {
+  endwin(); // 结束ncurses模式
+  return 0;
+}
+
+Operation get_operation() {
+  int key = getch();
+  if (key == 224)
+    key = getch();
+  switch (key) {
+  case 72:
+  case 119:
+    return MoveUp;
+  case 80:
+  case 115:
+    return MoveDown;
+  case 75:
+  case 97:
+    return MoveLeft;
+  case 77:
+  case 100:
+    return MoveRight;
+  case 27:
+  case 101:
+    return Quit;
+  case 114:
+    return Restart;
+  default:
+    return Pause;
+  }
+}
+
+int game_check() {
+  for (int i = 0; i < SIZE; i++) {
+    for (int j = 0; j < SIZE; j++) {
+      if (map[i][j] == 0)
+        return 0;
+    }
+  }
+  for (int i = 1; i < SIZE; i++) {
+    for (int j = 1; j < SIZE; j++) {
+      if ((map[i][j] == map[i - 1][j]) || (map[i][j] == map[i][j - 1]))
+        return 1;
+    }
+  }
+  return game_over();
+}
+
+int game_over() {
   clear(); // 刷新屏幕
   printw("FINAL SCORE: %d\n", score);
   printw("PRESS R TO PLAY AGAIN\nPRESS E TO EXIT\n");
@@ -57,16 +117,15 @@ int gameover() {
   return -1;
 }
 void init_map() {
+  memset(map, 0, SIZE * SIZE * sizeof(int));
   for (int i = 0; i < SIZE; i++) {
     for (int j = 0; j < SIZE; j++) {
       map[i][j] = 0;
     }
   }
-  random_map();
 }
 void random_map() {
   int i, j;
-  srand(time(NULL));
   do {
     i = rand() % SIZE;
     j = rand() % SIZE;
@@ -225,21 +284,7 @@ void reset() {
   init_map();
   score = 0;
 }
-int check() {
-  for (int i = 0; i < SIZE; i++) {
-    for (int j = 0; j < SIZE; j++) {
-      if (map[i][j] == 0)
-        return 0;
-    }
-  }
-  for (int i = 1; i < SIZE; i++) {
-    for (int j = 1; j < SIZE; j++) {
-      if ((map[i][j] == map[i - 1][j]) || (map[i][j] == map[i][j - 1]))
-        return 1;
-    }
-  }
-  return -1;
-}
+
 
 void swap(int *a, int *b) {
   int temp = *a;

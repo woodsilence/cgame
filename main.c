@@ -1,4 +1,4 @@
-#include "c2048.h"
+#include "c2048/c2048.h"
 
 int main()
 {
